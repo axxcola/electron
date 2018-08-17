@@ -193,6 +193,34 @@ gn-build-steps: &gn-build-steps
           cd src
           ninja -C out/Default electron:electron_app
     - run:
+        name: ffmpeg GN gen
+        command: |
+          if [ "$BUILD_FFMPEG" == "true" ]; then
+            cd src
+            gn gen out/ffmpeg --args='import("//electron/build/args/ffmpeg.gn") cc_wrapper="'"$SCCACHE_PATH"'"'" $GN_EXTRA_ARGS"
+          fi
+    - run:
+        name: Non proprietary ffmpeg build
+        command: |
+          if [ "$BUILD_FFMPEG" == "true" ]; then
+            cd src
+            ninja -C out/ffmpeg third_party/ffmpeg
+          fi
+    - run:
+        name: native mksnapshot GN gen
+        command: |
+          if [ "$BUILD_NATIVE_MKSNAPSHOT" == "true" ]; then
+            cd src
+            gn gen out/native_mksnapshot --args='import("//electron/build/args/native_mksnapshot.gn") cc_wrapper="'"$SCCACHE_PATH"'" v8_snapshot_toolchain="'"$MKSNAPSHOT_TOOLCHAIN"'"'" $GN_EXTRA_ARGS"
+          fi
+    - run:
+        name: native mksnapshot (arm/arm64) build
+        command: |
+          if [ "$BUILD_NATIVE_MKSNAPSHOT" == "true" ]; then
+            cd src
+            ninja -C out/native_mksnapshot v8:mksnapshot
+          fi
+    - run:
         name: Check sccache stats after build
         command: $SCCACHE_WRAPPER -s
     - run:
@@ -217,6 +245,12 @@ gn-build-steps: &gn-build-steps
         path: src/junit
     - store_artifacts:
         path: src/junit
+    - store_artifacts:
+        path: src/out/ffmpeg/libffmpeg.dylib
+    - store_artifacts:
+        path: src/out/ffmpeg/libffmpeg.so
+    - store_artifacts:
+        path: src/out/native_mksnapshot/mksnapshot
 
 build-defaults: &build-defaults
   docker:
@@ -398,6 +432,7 @@ jobs:
     environment:
       DISPLAY: ':99.0'
       GN_CONFIG: //electron/build/args/testing.gn
+      BUILD_FFMPEG: true
     docker:
       - image: electronbuilds/electron:0.0.8
     resource_class: 2xlarge
@@ -407,6 +442,7 @@ jobs:
     environment:
       DISPLAY: ':99.0'
       GN_CONFIG: //electron/build/args/release.gn
+      BUILD_FFMPEG: true
     docker:
       - image: electronbuilds/electron:0.0.8
     resource_class: 2xlarge
@@ -430,6 +466,7 @@ jobs:
       GN_CONFIG: //electron/build/args/testing.gn
       GN_EXTRA_ARGS: 'target_cpu = "x86"'
       NPM_CONFIG_ARCH: ia32
+      BUILD_FFMPEG: true
     docker:
       - image: electronbuilds/electron:0.0.8
     resource_class: 2xlarge
@@ -441,6 +478,7 @@ jobs:
       GN_CONFIG: //electron/build/args/release.gn
       GN_EXTRA_ARGS: 'target_cpu = "x86"'
       NPM_CONFIG_ARCH: ia32
+      BUILD_FFMPEG: true
     docker:
       - image: electronbuilds/electron:0.0.8
     resource_class: 2xlarge
@@ -474,6 +512,9 @@ jobs:
       GN_EXTRA_ARGS: 'target_cpu = "arm"'
       GCLIENT_EXTRA_ARGS: '--custom-var=checkout_arm=True'
       RUN_TESTS: false
+      BUILD_FFMPEG: true
+      BUILD_NATIVE_MKSNAPSHOT: true
+      MKSNAPSHOT_TOOLCHAIN: //build/toolchain/linux:clang_arm
     docker:
       - image: electronbuilds/electron:0.0.8
     resource_class: 2xlarge
@@ -507,6 +548,9 @@ jobs:
       GN_EXTRA_ARGS: 'target_cpu = "arm64" fatal_linker_warnings = false enable_linux_installer = false'
       GCLIENT_EXTRA_ARGS: '--custom-var=checkout_arm64=True'
       RUN_TESTS: false
+      BUILD_FFMPEG: true
+      BUILD_NATIVE_MKSNAPSHOT: true
+      MKSNAPSHOT_TOOLCHAIN: //build/toolchain/linux:clang_arm64
     docker:
       - image: electronbuilds/electron:0.0.8
     resource_class: 2xlarge
