@@ -41,7 +41,7 @@ test_script:
   - npm install
   - ps: Pop-Location
   - ./out/Default/electron.exe electron/spec --ci
-  - python electron\verify-ffmpeg.py -c Default --source_root "%pwd%\src" --ffmpeg_path "%pwd%\src\out\ffmpeg"
+  - python src\electron\verify-ffmpeg.py -c Default --source_root "%pwd%\src" --ffmpeg_path "%pwd%\src\out\ffmpeg"
 artifacts:
 - path: test-results.xml
   name: test-results.xml

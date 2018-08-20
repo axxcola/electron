@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import argparse
 import os
 import shutil
 import subprocess
@@ -18,7 +18,7 @@ PRODUCT_NAME = electron_gyp()['product_name%']
 
 def main():
   args = parse_args()
-  os.chdir(arg.source_root)
+  os.chdir(args.source_root)
 
   app_path = create_app_copy(args)
 
@@ -42,7 +42,7 @@ def main():
 
   returncode = 0
   try:
-    test_path = os.path.join('spec', 'fixtures', 'no-proprietary-codecs.js')
+    test_path = os.path.join(SOURCE_ROOT, 'spec', 'fixtures', 'no-proprietary-codecs.js')
     subprocess.check_call([electron, test_path] + sys.argv[1:])
   except subprocess.CalledProcessError as e:
     returncode = e.returncode
