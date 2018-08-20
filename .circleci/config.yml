@@ -122,7 +122,7 @@ build-steps: &build-steps
               script/verify-ffmpeg.py
             else
               echo 'Verifying ffmpeg on release build'
-              script/verify-ffmpeg.py -R
+              script/verify-ffmpeg.py -c R
             fi
           else
             echo 'Skipping tests due to configuration'
@@ -240,6 +240,9 @@ gn-build-steps: &gn-build-steps
             export npm_config_nodedir="$PWD/out/Default/gen/node_headers"
             (cd electron/spec && npm install)
             python electron/script/lib/dbus_mock.py ./out/Default/electron electron/spec --ci --enable-logging
+            if [ "$BUILD_FFMPEG" == "true" ]; then
+              python electron/verify-ffmpeg.py -c Default --source_root "$PWD/src" --ffmpeg_path "$PWD/src/out/ffmpeg"
+            fi
           fi
     - store_test_results:
         path: src/junit

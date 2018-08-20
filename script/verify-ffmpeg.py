@@ -17,14 +17,10 @@ PRODUCT_NAME = electron_gyp()['product_name%']
 
 
 def main():
-  os.chdir(SOURCE_ROOT)
+  args = parse_args()
+  os.chdir(arg.source_root)
 
-  if len(sys.argv) == 2 and sys.argv[1] == '-R':
-    config = 'R'
-  else:
-    config = 'D'
-
-  app_path = create_app_copy(config)
+  app_path = create_app_copy(args)
 
   if sys.platform == 'darwin':
     electron = os.path.join(app_path, 'Contents', 'MacOS', PRODUCT_NAME)
@@ -42,7 +38,7 @@ def main():
     ffmpeg_name = 'libffmpeg.so'
 
   # Copy ffmpeg without proprietary codecs into app
-  shutil.copy(os.path.join(FFMPEG_LIBCC_PATH, ffmpeg_name), ffmpeg_app_path)
+  shutil.copy(os.path.join(args.ffmpeg_path, ffmpeg_name), ffmpeg_app_path)
 
   returncode = 0
   try:
@@ -57,9 +53,9 @@ def main():
 
 
 # Create copy of app to install ffmpeg library without proprietary codecs into
-def create_app_copy(config):
-  initial_app_path = os.path.join(SOURCE_ROOT, 'out', config)
-  app_path = os.path.join(SOURCE_ROOT, 'out', config + '-no-proprietary-codecs')
+def create_app_copy(args):
+  initial_app_path = os.path.join(args.source_root, 'out', args.config)
+  app_path = os.path.join(args.source_root, 'out', args.config + '-no-proprietary-codecs')
 
   if sys.platform == 'darwin':
     app_name = '{0}.app'.format(PRODUCT_NAME)
@@ -70,6 +66,19 @@ def create_app_copy(config):
   shutil.copytree(initial_app_path, app_path, symlinks=True)
   return app_path
 
+def parse_args():
+  parser = argparse.ArgumentParser(description='Test non-proprietary ffmpeg')
+  parser.add_argument('-c', '--config',
+                      help='Test with Release or Debug configuration',
+                      default='D',
+                      required=False)
+  parser.add_argument('--source_root',
+                      default=SOURCE_ROOT,
+                      required=False)
+  parser.add_argument('--ffmpeg_path',
+                      default=FFMPEG_LIBCC_PATH,
+                      required=False)
+  return parser.parse_args()
 
 if __name__ == '__main__':
   sys.exit(main())
