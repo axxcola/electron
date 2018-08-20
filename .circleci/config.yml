@@ -240,9 +240,12 @@ gn-build-steps: &gn-build-steps
             export npm_config_nodedir="$PWD/out/Default/gen/node_headers"
             (cd electron/spec && npm install)
             python electron/script/lib/dbus_mock.py ./out/Default/electron electron/spec --ci --enable-logging
-            if [ "$BUILD_FFMPEG" == "true" ]; then
-              python src/electron/verify-ffmpeg.py -c Default --source_root "$PWD/src" --ffmpeg_path "$PWD/src/out/ffmpeg"
-            fi
+          fi
+    - run:
+        name: Verify ffmpeg
+        command: |
+          if [ "$RUN_TESTS" != "false" ] && [ "$BUILD_FFMPEG" == "true" ]; then
+            python src/electron/verify-ffmpeg.py -c Default --source_root "$PWD/src" --ffmpeg_path "$PWD/src/out/ffmpeg"
           fi
     - store_test_results:
         path: src/junit
